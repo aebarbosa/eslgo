@@ -14,8 +14,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/percipia/eslgo/command"
-	"github.com/percipia/eslgo/command/call"
+	"github.com/aebarbosa/eslgo/command"
+	"github.com/aebarbosa/eslgo/command/call"
 	"io"
 	"log"
 )
@@ -29,6 +29,21 @@ func (c *Conn) EnableEvents(ctx context.Context) error {
 	} else {
 		_, err = c.SendCommand(ctx, command.Event{
 			Format: "plain",
+			Listen: []string{"all"},
+		})
+	}
+	return err
+}
+
+func (c *Conn) EnableJSONEvents(ctx context.Context) error {
+	var err error
+	if c.outbound {
+		_, err = c.SendCommand(ctx, command.MyEvents{
+			Format: "json",
+		})
+	} else {
+		_, err = c.SendCommand(ctx, command.Event{
+			Format: "json",
 			Listen: []string{"all"},
 		})
 	}

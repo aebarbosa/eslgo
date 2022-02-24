@@ -11,7 +11,7 @@
 package call
 
 import (
-	"github.com/percipia/eslgo/command"
+	"github.com/aebarbosa/eslgo/command"
 	"net"
 	"net/textproto"
 )
