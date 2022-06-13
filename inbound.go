@@ -13,9 +13,10 @@ package eslgo
 import (
 	"context"
 	"fmt"
-	"github.com/aebarbosa/eslgo/command"
 	"net"
 	"time"
+
+	"github.com/aebarbosa/eslgo/command"
 )
 
 // InboundOptions - Used to dial a new inbound ESL connection to FreeSWITCH
@@ -40,6 +41,8 @@ func Dial(address, password string, onDisconnect func()) (*Conn, error) {
 	opts := DefaultInboundOptions
 	opts.Password = password
 	opts.OnDisconnect = onDisconnect
+	opts.Address = address
+	opts.Network = opts.Options.Network
 	return opts.Dial(address)
 }
 

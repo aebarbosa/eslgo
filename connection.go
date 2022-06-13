@@ -14,12 +14,13 @@ import (
 	"bufio"
 	"context"
 	"errors"
-	"github.com/google/uuid"
-	"github.com/aebarbosa/eslgo/command"
 	"net"
 	"net/textproto"
 	"sync"
 	"time"
+
+	"github.com/aebarbosa/eslgo/command"
+	"github.com/google/uuid"
 )
 
 type Conn struct {
@@ -44,6 +45,8 @@ type Options struct {
 	Context     context.Context // This specifies the base running context for the connection. If this context expires all connections will be terminated.
 	Logger      Logger          // This specifies the logger to be used for any library internal messages. Can be set to nil to suppress everything.
 	ExitTimeout time.Duration   // How long should we wait for FreeSWITCH to respond to our "exit" command. 5 seconds is a sane default.
+	Network     string
+	Address     string
 }
 
 // DefaultOptions - The default options used for creating the connection
@@ -86,7 +89,7 @@ func newConnection(c net.Conn, outbound bool, opts Options) *Conn {
 		logger:         opts.Logger,
 		exitTimeout:    opts.ExitTimeout,
 	}
-	go instance.receiveLoop()
+	go instance.receiveLoop(opts.Network, opts.Network)
 	go instance.eventLoop()
 	return instance
 }
@@ -263,11 +266,17 @@ func (c *Conn) eventLoop() {
 	}
 }
 
-func (c *Conn) receiveLoop() {
+func (c *Conn) receiveLoop(network string, address string) {
 	for c.runningContext.Err() == nil {
 		err := c.doMessage()
 		if err != nil {
-			c.logger.Warn("Error receiving message: %s\n", err.Error())
+			c.logger.Warn("Error receiving message (Reloading connection): %s\n", err.Error())
+			netCon, err := net.Dial(network, address)
+			if err != nil {
+				c.logger.Warn("Error reloading connection: %s\n", err.Error())
+			} else {
+				c.conn = netCon
+			}
 			break
 		}
 	}
